@@ -1,58 +1,69 @@
 const express = require("express");
 const app = express();
-const data = require("./data.json");
 
-app.use(express.json());
+//Conexão com BD PostgreSQL
 
-//Listar todos os usuários
-app.get("/users", function(req, res) {
-  res.json(data);
+const { Client } = require("pg");
+const { Connection } = require("pg/lib");
+const { connectionString } = require("pg/lib/defaults");
+
+const connection = new Client({
+    host:"localhost",
+    user: "postgres",
+    port: 5432,
+    password: "postgres",
+    database: "postgres"
 });
 
 
-//Listar um usuário por ID
-app.get("/users/:id", function(req, res) {
-  const { id } = req.params;
-  const user = data.find(cli => cli.id == id);
-
-  if (!user) return res.status(204).json();
-
-  res.json(user);
+// Ler Cadastros
+connection.connect(function(err){
+    if (err) console.error('Erro ao realizar a conexao com BD:' + err.stack); return;
 });
 
-
-//Criar Usuário
-app.post("/users", function(req, res) {
-  const { id, nome, sobrenome, idade, sexo } = req.body;
-
-  // Salvar
-
-  res.json({ id, nome, sobrenome, idade, sexo });
+connection.query('select * from users', (err, res)=>{
+    if(!err){
+        console.log(res.rows);
+    }else{
+        console.log(err.message);
+    }
+    connection.end;
 });
 
-//Atualizar dados do usuário
-app.put("/users/:id", function(req, res) {
-  const { id } = req.params;
-  const user = data.find(cli => cli.id == id);
-
-  if (!user) return res.status(204).json();
-
-  const { nome } = req.body;
-
-  user.nome = nome;
-
-  res.json(user);
+//Cadastrar Usuários
+connection.connect(function(err){
+    if (err) console.error('Erro ao realizar a conexao com BD:' + err.stack); return;
 });
 
-// Deletar Usuário
-app.delete("/users/:id", function(req, res) {
-  const { id } = req.params;
-  const usersFiltered = data.filter(user => user.id != id);
-
-  res.json(usersFiltered);
+connection.query("INSERT INTO users (id, nome, sobrenome, sexo, idade) VALUES (7, 'Viviane', 'Sousa', 'F', 22)", function(err, result){
+    if(!err){
+        console.log('Usuário cadastrado com Sucesso!');
+    }else{
+        console.log('Erro ao cadastrar o Usuário!');
+    }
 });
 
-// Porta Utilizada
-app.listen(3000, function() {
-  console.log("O servidor está rodando!");
+//Atualizar Cadastro
+connection.connect(function(err){
+    if (err) console.error('Erro ao realizar a conexao com BD:' + err.stack); return;
+});
+
+connection.query("UPDATE users SET nome = 'Cesar' WHERE id = 6", function(err, result){
+    if(!err){
+        console.log('Usuário editado com Sucesso!');
+    }else{
+        console.log('Erro ao editar o Usuário!');
+    }
+});
+//Deletar Cadastro
+connection.connect(function(err){
+    if (err) console.error('Erro ao realizar a conexao com BD:' + err.stack); return;
+});
+
+connection.query("DELETE FROM users WHERE id = 7", function(err, result){
+    if(!err){
+        console.log('Usuário Apagado com Sucesso!');
+    }else{
+        console.log('Erro ao Apagar o Usuário!');
+    }
 });
